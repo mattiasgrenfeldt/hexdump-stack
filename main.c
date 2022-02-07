@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include "getcanary.c"
 
 /*
     typ följande saker borde den färga olika:
@@ -17,18 +18,20 @@
 */
 
 // Colors: https://gist.github.com/iamnewton/8754917
-#define COLOR_RED    "\e[0;31m"
-#define COLOR_GREEN  "\e[0;32m"
-#define COLOR_YELLOW "\e[0;33m"
-#define COLOR_BLUE   "\e[0;34m"
-#define COLOR_PURPLE "\e[0;35m"
-#define COLOR_CYAN   "\e[0;36m"
-#define COLOR_RESET  "\e[0m"
+#define COLOR_RED      "\e[0;31m"
+#define COLOR_BOLD_RED "\e[1;31m"
+#define COLOR_GREEN    "\e[0;32m"
+#define COLOR_YELLOW   "\e[0;33m"
+#define COLOR_BLUE     "\e[0;34m"
+#define COLOR_PURPLE   "\e[0;35m"
+#define COLOR_CYAN     "\e[0;36m"
+#define COLOR_RESET    "\e[0m"
 
 #define STACK_COLOR COLOR_RED
 #define HEAP_COLOR COLOR_GREEN
 #define BIN_COLOR COLOR_BLUE
 #define LIBC_COLOR COLOR_YELLOW
+#define CANARY_COLOR COLOR_BOLD_RED
 
 struct memrange {
     size_t start;
@@ -83,6 +86,8 @@ void hexdump_stack() {
     puts("");
     fclose(f);
 
+    canary_t canary = read_canary();
+
     // Hex-dump caller's stack
     puts("--------------------- The stack ---------------------");
     puts("                   7 6 5 4 3 2 1 0    f e d c b a 9 8");
@@ -97,6 +102,7 @@ void hexdump_stack() {
             else if (heap.start <= val && val < heap.end) strcpy(color, HEAP_COLOR);
             else if (bin.start <= val && val < bin.end) strcpy(color, BIN_COLOR);
             else if (libc.start <= val && val < libc.end) strcpy(color, LIBC_COLOR);
+            else if (val == canary) strcpy(color, CANARY_COLOR);
             printf(" %s0x%016zx" COLOR_RESET, color, val);
         }
         puts("");
